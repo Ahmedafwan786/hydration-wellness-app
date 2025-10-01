@@ -38,7 +38,7 @@
       cursor: pointer;
     }
     button:hover { background: #2980b9; }
-    input { padding: 8px; margin: 5px; border-radius: 8px; border: 1px solid #ccc; width: 80%; }
+    input, select { padding: 8px; margin: 5px; border-radius: 8px; border: 1px solid #ccc; width: 80%; }
     #teamList { list-style-type: none; padding: 0; font-size: 18px; }
     #teamList li { margin: 8px 0; display: flex; align-items: center; }
     #teamList li::before { content: "👤"; margin-right: 10px; }
@@ -65,6 +65,16 @@
 
   <div class="card">
     <div class="card-header">Set Reminder</div>
+    <label for="interval">Select Reminder Interval:</label>
+    <select id="interval" onchange="toggleCustomInput()">
+      <option value="60000">Every 1 Minute</option>
+      <option value="300000" selected>Every 5 Minutes</option>
+      <option value="600000">Every 10 Minutes</option>
+      <option value="custom">Custom</option>
+    </select>
+    <br><br>
+    <input type="number" id="customMinutes" placeholder="Enter minutes" style="display:none;">
+    <br><br>
     <button id="reminderBtn" onclick="toggleReminder()">Start Reminder</button>
   </div>
 
@@ -84,7 +94,7 @@
   <div class="card">
     <div class="card-header">Contact Us</div>
     <p>For any queries or feedback, reach out to us:</p>
-    <a href="mailto:afwan.eastpoint@gmail.com" target="_blank">Click here to Email Us 📧</a>
+    <a href="mailto:yourname@example.com" target="_blank">Click here to Email Us 📧</a>
   </div>
 
   <script>
@@ -103,21 +113,68 @@
     function addGlass(){ if(glasses < goal){ glasses++; document.getElementById("progress").innerText = `Glasses Drank: ${glasses} / ${goal}`; updateChart(); } else { alert("Goal already reached for today! ✅"); } }
     function showTip(){ const tips = ["Stand up and stretch your arms for 30 seconds.","Take 5 deep breaths to relax your body.","Roll your shoulders gently to release tension.","Do 10 squats to energize yourself.","Drink a glass of water right now! 💧"]; const randomTip = tips[Math.floor(Math.random() * tips.length)]; document.getElementById("tip").innerText = randomTip; }
 
-    function toggleReminder(){
+    function toggleCustomInput() {
+      const interval = document.getElementById("interval").value;
+      const customInput = document.getElementById("customMinutes");
+      if (interval === "custom") {
+        customInput.style.display = "block";
+      } else {
+        customInput.style.display = "none";
+      }
+    }
+
+    function toggleReminder() {
       const btn = document.getElementById('reminderBtn');
-      if(reminderInterval){
+
+      if (reminderInterval) {
         clearInterval(reminderInterval);
         reminderInterval = null;
         btn.innerText = 'Start Reminder';
         alert('Reminder stopped.');
       } else {
-        if(Notification.permission !== 'granted') Notification.requestPermission();
-        reminderInterval = setInterval(() => {
-          new Notification('Hydration Reminder', { body: 'Time to drink a glass of water! 💧' });
-        }, 60000); // 1 minute for testing
-        btn.innerText = 'Stop Reminder';
-        alert('Reminder started! You will get notifications every minute.');
+        if (Notification.permission === "granted") {
+          startReminder();
+        } else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+              startReminder();
+            } else {
+              alert("Notifications are blocked. Please allow them in browser settings.");
+            }
+          });
+        } else {
+          alert("Notifications are blocked. Please enable them in browser settings.");
+        }
       }
+    }
+
+    function startReminder() {
+      const btn = document.getElementById('reminderBtn');
+      let interval = document.getElementById('interval').value;
+
+      if (interval === "custom") {
+        let customValue = document.getElementById("customMinutes").value;
+        if (!customValue || customValue <= 0) {
+          alert("Please enter a valid custom time in minutes.");
+          return;
+        }
+        interval = customValue * 60000; // convert minutes to ms
+      }
+
+      reminderInterval = setInterval(() => {
+        // Play sound
+        let audio = new Audio("https://www.soundjay.com/buttons/sounds/beep-07.mp3");
+        audio.play();
+
+        // Show notification
+        new Notification("Hydration Reminder", {
+          body: "Time to drink a glass of water! 💧",
+          icon: "https://cdn-icons-png.flaticon.com/512/2913/2913461.png"
+        });
+      }, interval);
+
+      btn.innerText = 'Stop Reminder';
+      alert(`Reminder started! You'll get notifications every ${interval/60000} minutes with sound.`);
     }
 
     function calculateBMI(){ const weight = document.getElementById("weight").value; const height = document.getElementById("height").value; if(weight > 0 && height > 0){ const bmi = (weight / ((height/100) ** 2)).toFixed(2); let category = ""; if(bmi < 18.5) category = "Underweight"; else if(bmi < 24.9) category = "Normal weight"; else if(bmi < 29.9) category = "Overweight"; else category = "Obese"; document.getElementById("bmiResult").innerText = `BMI: ${bmi} (${category})`; } else { alert("Please enter valid weight and height!"); } }
