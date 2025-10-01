@@ -76,6 +76,7 @@
     <input type="number" id="customMinutes" placeholder="Enter minutes" style="display:none;">
     <br><br>
     <button id="reminderBtn" onclick="toggleReminder()">Start Reminder</button>
+    <button onclick="testReminder()">Test Reminder 🔔</button>
   </div>
 
   <div class="card">
@@ -94,7 +95,7 @@
   <div class="card">
     <div class="card-header">Contact Us</div>
     <p>For any queries or feedback, reach out to us:</p>
-    <a href="mailto:yourname@example.com" target="_blank">Click here to Email Us 📧</a>
+    <a href="mailto:afwan.eastpoint@gmail.com" target="_blank">Click here to Email Us 📧</a>
   </div>
 
   <script>
@@ -162,19 +163,29 @@
       }
 
       reminderInterval = setInterval(() => {
-        // Play sound
-        let audio = new Audio("https://www.soundjay.com/buttons/sounds/beep-07.mp3");
-        audio.play();
+        triggerReminder();
+      }, interval);
 
-        // Show notification
+      btn.innerText = 'Stop Reminder';
+      alert(`Reminder started! You'll get reminders every ${interval/60000} minutes.`);
+    }
+
+    function triggerReminder(){
+      let audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+      audio.play().catch(err => console.log("Audio play blocked: ", err));
+
+      if ("Notification" in window && Notification.permission === "granted") {
         new Notification("Hydration Reminder", {
           body: "Time to drink a glass of water! 💧",
           icon: "https://cdn-icons-png.flaticon.com/512/2913/2913205.png"
         });
-      }, interval);
+      } else {
+        alert("💧 Time to drink a glass of water!");
+      }
+    }
 
-      btn.innerText = 'Stop Reminder';
-      alert(`Reminder started! You'll get notifications every ${interval/60000} minutes with sound.`);
+    function testReminder(){
+      triggerReminder();
     }
 
     function calculateBMI(){ const weight = document.getElementById("weight").value; const height = document.getElementById("height").value; if(weight > 0 && height > 0){ const bmi = (weight / ((height/100) ** 2)).toFixed(2); let category = ""; if(bmi < 18.5) category = "Underweight"; else if(bmi < 24.9) category = "Normal weight"; else if(bmi < 29.9) category = "Overweight"; else category = "Obese"; document.getElementById("bmiResult").innerText = `BMI: ${bmi} (${category})`; } else { alert("Please enter valid weight and height!"); } }
